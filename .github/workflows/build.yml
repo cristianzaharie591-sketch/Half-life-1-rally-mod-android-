@@ -17,11 +17,17 @@ jobs:
 
     - name: Patch Legacy Code macros
       run: |
-        # Înlocuim static_cast-urile problematice din cbase.h cu cast-uri de tip C (C-style cast), ocolind regulile stricte moderne
-        sed -i 's/static_cast <void (CBaseEntity::\*)(void)> / (void (CBaseEntity::*)(void)) /g' dlls/cbase.h
-        sed -i 's/static_cast <void (CBaseEntity::\*)(CBaseEntity \*)> / (void (CBaseEntity::*)(CBaseEntity *)) /g' dlls/cbase.h
-        sed -i 's/static_cast <void (CBaseEntity::\*)(CBaseEntity \*, CBaseEntity \*, USE_TYPE, float)> / (void (CBaseEntity::*)(CBaseEntity *, CBaseEntity *, USE_TYPE, float)) /g' dlls/cbase.h
-        sed -i 's/static_cast <void (CBaseEntity::\*)(CBaseEntity \*)> / (void (CBaseEntity::*)(CBaseEntity *)) /g' dlls/cbase.h
+        # 1. Injectăm un șablon de tip union-cast în cbase.h pentru a fenta verificările stricte la SetThink/SetTouch
+        sed -i 's/#define SetThink.*/template<typename T, typename S> inline T XashCast(S s) { union { S src; T dst; } u; u.src = s; return u.dst; }\n#define SetThink( a ) m_pfnThink = XashCast<void (CBaseEntity::*)(void)>(a)/' dlls/cbase.h
+        sed -i 's/#define SetTouch.*/#define SetTouch( a ) m_pfnTouch = XashCast<void (CBaseEntity::*)(CBaseEntity *)>(a)/' dlls/cbase.h
+        sed -i 's/#define SetUse.*/#define SetUse( a ) m_pfnUse = XashCast<void (CBaseEntity::*)(CBaseEntity *, CBaseEntity *, USE_TYPE, float)>(a)/' dlls/cbase.h
+        sed -i 's/#define SetBlocked.*/#define SetBlocked( a ) m_pfnBlocked = XashCast<void (CBaseEntity::*)(CBaseEntity *)>(a)/' dlls/cbase.h
+
+        # 2. Reparăm lipsa tipului de return pentru HasWeapon în weapons.h
+        sed -i 's/HasWeapon( CBasePlayerItem/BOOL HasWeapon( CBasePlayerItem/g' dlls/weapons.h
+
+        # 3. Eliminăm calificarea extra interzisă "CBasePlayer::" din interiorul clasei în player.h
+        sed -i 's/void CBasePlayer::TabulateAmmo/void TabulateAmmo/g' dlls/player.h
 
     - name: Configure CMake
       run: cmake -B build -DCMAKE_BUILD_TYPE=Release
