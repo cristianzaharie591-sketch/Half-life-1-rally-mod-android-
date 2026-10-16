@@ -15,6 +15,14 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y cmake g++-multilib gcc-multilib
 
+    - name: Patch Legacy Code macros
+      run: |
+        # Înlocuim static_cast-urile problematice din cbase.h cu cast-uri de tip C (C-style cast), ocolind regulile stricte moderne
+        sed -i 's/static_cast <void (CBaseEntity::\*)(void)> / (void (CBaseEntity::*)(void)) /g' dlls/cbase.h
+        sed -i 's/static_cast <void (CBaseEntity::\*)(CBaseEntity \*)> / (void (CBaseEntity::*)(CBaseEntity *)) /g' dlls/cbase.h
+        sed -i 's/static_cast <void (CBaseEntity::\*)(CBaseEntity \*, CBaseEntity \*, USE_TYPE, float)> / (void (CBaseEntity::*)(CBaseEntity *, CBaseEntity *, USE_TYPE, float)) /g' dlls/cbase.h
+        sed -i 's/static_cast <void (CBaseEntity::\*)(CBaseEntity \*)> / (void (CBaseEntity::*)(CBaseEntity *)) /g' dlls/cbase.h
+
     - name: Configure CMake
       run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
