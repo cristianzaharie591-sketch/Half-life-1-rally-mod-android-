@@ -8,6 +8,10 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -m32")
 endif()
 
+# REPARARE COD VECHI: Forțăm compilatorul să includă librăriile de text/sistem lipsă (strcmp, memcpy, etc.)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include string.h -include stdio.h -include stdlib.h")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -include string.h -include stdio.h -include stdlib.h")
+
 # Definiții globale cerute de HLSDK și Xash3D pentru Linux
 add_definitions(-DLINUX -D_LINUX -DXASH3D -D_POSIX_C_SOURCE=200809L)
 set(CMAKE_CXX_STANDARD 11)
