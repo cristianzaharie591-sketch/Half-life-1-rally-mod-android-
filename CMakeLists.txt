@@ -8,13 +8,18 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -m32")
 endif()
 
-# REPARARE COD VECHI: Forțăm compilatorul să includă librăriile de text/sistem lipsă (strcmp, memcpy, etc.)
+# REPARARE COD ISTORIC: Forțăm includerea headerelor de sistem de bază
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include string.h -include stdio.h -include stdlib.h")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -include string.h -include stdio.h -include stdlib.h")
 
+# -fpermissive: Retrogradează erorile stricte de tipuri C++ (cum ar fi la SetThink/SetTouch) la simple avertismente
+# -std=gnu++98: Utilizează standardul de limbaj din epoca GoldSrc (anii '90 - 2000)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
+set(CMAKE_CXX_STANDARD 98)
+set(CMAKE_CXX_EXTENSIONS ON)
+
 # Definiții globale cerute de HLSDK și Xash3D pentru Linux
-add_definitions(-DLINUX -D_LINUX -DXASH3D -D_POSIX_C_SOURCE=200809L)
-set(CMAKE_CXX_STANDARD 11)
+add_definitions(-DLINUX -D_LINUX -DXASH3D -D_POSIX_C_SOURCE=200809L -DGNUC)
 
 # Directoarele cu headere (Include paths)
 include_directories(
@@ -31,7 +36,7 @@ file(GLOB_RECURSE SERVER_SRCS
     "${CMAKE_SOURCE_DIR}/game_shared/*.cpp"
 )
 add_library(hl SHARED ${SERVER_SRCS})
-target_compile_options(hl PRIVATE -w) 
+target_compile_options(hl PRIVATE -w -fpermissive) 
 
 # 2. COMPILARE CLIENT (client.so)
 file(GLOB_RECURSE CLIENT_SRCS 
@@ -40,7 +45,7 @@ file(GLOB_RECURSE CLIENT_SRCS
     "${CMAKE_SOURCE_DIR}/pm_shared/*.cpp"
 )
 add_library(client SHARED ${CLIENT_SRCS})
-target_compile_options(client PRIVATE -w)
+target_compile_options(client PRIVATE -w -fpermissive)
 
 # 3. CREAREA AUTOMATĂ A STRUCTURII DE FOLDERE SOLICITATE
 set(STRUCT_DIR "${CMAKE_SOURCE_DIR}/LINUX .SO FILES AND FOLDERS")
